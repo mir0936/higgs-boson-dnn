@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 print("Loading CERN ATLAS collision data...")
 df = pd.read_csv('training.csv')
 
-# CERN uses -999.0 for missing sensor data. Replace with 0 for the network.
+# Note: Took me hours to figure out why my loss was exploding with NaNs. CERN uses -999.0 for missing sensor readings instead of standard nulls. Replacing with 0.0 fixes the tensor math.
 df = df.replace(-999.0, 0.0)
 
 # Features (30 kinematic variables) and Labels (s = signal, b = background)
