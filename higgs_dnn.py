@@ -13,47 +13,41 @@ df = pd.read_csv('training.csv')
 # Note: Took me hours to figure out why my loss was exploding with NaNs. CERN uses -999.0 for missing sensor readings instead of standard nulls. Replacing with 0.0 fixes the tensor math.
 df = df.replace(-999.0, 0.0)
 
-# Features (30 kinematic variables) and Labels (s = signal, b = background)
 X = df.drop(['EventId', 'Weight', 'Label'], axis=1).values
-y = np.where(df['Label'] == 's', 1, 0) # Convert 's' and 'b' to 1 and 0
+y = np.where(df['Label'] == 's', 1, 0)
 
-# Split into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Standardize the physical quantities (zero mean, unit variance)
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# Convert to PyTorch tensors
 X_train = torch.tensor(X_train, dtype=torch.float32)
 y_train = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)
 X_test = torch.tensor(X_test, dtype=torch.float32)
 y_test = torch.tensor(y_test, dtype=torch.float32).unsqueeze(1)
 
-# Define the Deep Neural Network
 class HiggsDNN(nn.Module):
     def __init__(self, input_dim):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(input_dim, 128),
             nn.ReLU(),
-            nn.Dropout(0.3), # Prevents overfitting to background noise
+            nn.Dropout(0.3),
             nn.Linear(128, 64),
             nn.ReLU(),
             nn.Dropout(0.3),
             nn.Linear(64, 1),
-            nn.Sigmoid() # Outputs probability of being a Higgs Boson
+            nn.Sigmoid()
         )
 
     def forward(self, x):
         return self.net(x)
 
 model = HiggsDNN(X_train.shape[1])
-criterion = nn.BCELoss() # Binary Cross Entropy for signal vs background
+criterion = nn.BCELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# Train the model
 epochs = 20
 batch_size = 2048
 print("Training Deep Neural Network...")
@@ -78,24 +72,24 @@ for epoch in range(epochs):
     losses.append(avg_loss)
     print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.4f}")
 
-# Evaluate accuracy
 with torch.no_grad():
     test_preds = model(X_test)
     test_preds = (test_preds >= 0.5).float()
     accuracy = (test_preds == y_test).float().mean()
     print(f"\nFinal Test Accuracy: {accuracy.item()*100:.2f}%")
 
-# Plot the loss curve
-plt.plot(losses, color='blue', linewidth=2)
-plt.title('Higgs Boson DNN Training Loss')
+# Basic Training Loss Curve
+plt.figure()
+plt.plot(range(1, epochs+1), losses, label='Training Loss')
 plt.xlabel('Epoch')
-plt.ylabel('Binary Cross Entropy Loss')
-plt.grid(True)
+plt.ylabel('Loss')
+plt.title('DNN Training Loss')
+plt.legend()
 plt.savefig('higgs_training.png')
-print("Saved training curve to higgs_training.png.")
-from sklearn.metrics import roc_curve, auc
+print("Saved basic training curve to higgs_training.png.")
 
-# Generate ROC Curve
+# Basic ROC Curve
+from sklearn.metrics import roc_curve, auc
 with torch.no_grad():
     y_score = model(X_test).numpy()
     
