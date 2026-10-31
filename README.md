@@ -17,5 +17,4 @@ The model successfully converges using Binary Cross Entropy (BCE) loss. The resu
 
 ## Limitations & Future Work
 The current model assumes perfect detector efficiency and does not account for LHC pile-up events (multiple proton collisions overlapping). Additionally, while the DNN achieves high accuracy, it is a "black box." Future iterations of this project will explore using XGBoost Decision Trees to compare inference speeds and feature importance (e.g., seeing if transverse momentum dominates the classification).
-## Limitations & Future Work
-The current model assumes perfect detector efficiency and does not account for LHC pile-up events (multiple proton collisions overlapping). Additionally, while the DNN achieves high accuracy, it is a "black box." Future iterations of this project will explore using XGBoost Decision Trees to compare inference speeds and feature importance (e.g., seeing if transverse momentum dominates the classification).
+
